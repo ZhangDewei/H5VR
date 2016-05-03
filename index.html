@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Html5 VR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #222222;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+
+			.container-box{
+				display: block;
+				z-index: 1;
+				background-color: #000;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
+
+			.video-div{
+				display: none;
+				overflow: hidden;
+				z-index: 0;
+				background-color: #000;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
+			.video-box{
+				width: 100%;
+				position: absolute;
+			    margin: auto;
+			}
+
+			.nav {
+			  display: block;
+			  margin: 0;
+			  position: absolute;
+			  width: 100%;
+			  height: 100px;
+			  top: 0;
+			  z-index: 886;
+
+			}
+
+			.icn {
+				width: 50px;
+				height: 50px;
+				left: 50%;
+				margin-left: -25px;
+				position: relative;
+			}
+
+			.glass1 {
+			  background: url(./img/glass1.svg) 0 -50px no-repeat;
+			  background-size: 50px 100px;
+			}
+			.glass2 {
+			  background: url(./img/glass2.svg) 0 -50px no-repeat;
+			  background-size: 50px 100px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="nav" id="nav"> 
+			<div class="icn glass1" id="glass1" style="display: none;"> </div> 
+			<div class="icn glass2" id="glass2">  </div> 
+		</div>
+
+		<div class="container-box" id="container"></div>
+
+		<div class="video-div">
+		    <video class="video-box" id="video1" src="cs0.mp4" x-webkit-airplay="true" webkit-playsinline="true" preload="auto" ></video>
+		</div>
+
+
+
+		<script src="build/zepto.min.js"></script>
+		<script src="build/three.min.js"></script>
+		<script src="js/controls/DeviceOrientationControls.js"></script>
+		<script src="js/effects/StereoEffect.js"></script>
+		<script>
+		    document.addEventListener('touchmove', function(event){event.preventDefault();}, false);
+
+		    var isVR=true;
+		    $(".nav").on("click",changeEye);
+
+		    function changeEye()
+		    {
+		    	console.log("changeEye");
+
+		        if(isVR)
+		        {
+		        	$(".glass1").show();
+		        	$(".glass2").hide();
+		        }else{
+		            $(".glass1").hide();
+		        	$(".glass2").show();
+		        }
+
+		        isVR=!isVR;
+
+		        onWindowResize();
+		    }
+
+		    
+			var camera, scene, renderer,effect;
+			var controls;
+			var videoTexture;
+			var container;
+
+
+
+			var isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+
+
+			init();
+			animate();
+
+			function init() {
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+				camera.target = new THREE.Vector3( 0, 0, 0 );
+
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereGeometry( 500, 60, 40 );
+				geometry.applyMatrix( new THREE.Matrix4().makeScale( -1, 1, 1 ) );
+
+				video = document.getElementById( 'video1' );
+				video.width = 960;
+				video.height = 360;
+				video.autoplay = true;
+				video.loop = true; 
+				video.crossOrigin='anonymous';
+				video.src='cs0.mp4';
+
+				videoTexture = new THREE.Texture( video );
+				videoTexture.generateMipmaps = false;
+				videoTexture.minFilter = THREE.LinearFilter;
+
+				var material   = new THREE.MeshBasicMaterial( { map : videoTexture } );
+
+				var mesh = new THREE.Mesh( geometry, material );
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				container.appendChild( renderer.domElement );
+
+
+				effect = new THREE.StereoEffect( renderer );
+				effect.eyeSeparation = 4;
+				effect.setSize( window.innerWidth, window.innerHeight );
+
+
+				controls = new THREE.DeviceOrientationControls( camera );
+			    //controls.maxPolarAngle = Math.PI / 2;
+			    //controls.minDistance = 500;
+			    //controls.maxDistance = 1000;
+			    controls.connect();
+
+				document.addEventListener( 'touchstart', touchstart, false );
+				document.addEventListener( 'touchend', touchend, false );
+				document.addEventListener( 'touchmove', touchmove, false );
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				effect.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function touchstart( event ) {
+				switch ( event.touches.length ) 
+				{
+					case 1:	// one-fingered touch: rotate
+						isUserInteracting = true;
+						onPointerDownPointerX = event.touches[ 0 ].pageX;
+						onPointerDownPointerY = event.touches[ 0 ].pageY;
+						onPointerDownLon = lon;
+						onPointerDownLat = lat;
+						break;
+				}
+			}
+	        function touchmove( event ) {
+				switch ( event.touches.length ) 
+				{
+					case 1:	// one-fingered touch: rotate
+						if ( isUserInteracting === true ) {
+							lon = ( onPointerDownPointerX - event.touches[ 0 ].pageX ) * 0.1 + onPointerDownLon;
+							lat = ( event.touches[ 0 ].pageY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+						}
+						break;
+				}
+	        }
+			function touchend( /* event */ ) {
+                isUserInteracting = false;
+			}
+
+
+			function onDocumentMouseDown( event ) {
+				event.preventDefault();
+				isUserInteracting = true;
+				onPointerDownPointerX = event.clientX;
+				onPointerDownPointerY = event.clientY;
+				onPointerDownLon = lon;
+				onPointerDownLat = lat;
+			}
+			function onDocumentMouseMove( event ) {
+				if ( isUserInteracting === true ) {
+					lon = ( onPointerDownPointerX - event.clientX ) * 0.1 + onPointerDownLon;
+					lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+				}
+			}
+			function onDocumentMouseUp( event ) {
+				isUserInteracting = false;
+			}
+
+
+
+
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				update();
+
+			}
+
+			function update() {
+
+				if( video.readyState === video.HAVE_ENOUGH_DATA ){
+				  videoTexture.needsUpdate = true;
+				}
+
+
+				if ( isUserInteracting === false ) 
+				{
+					controls.update();	
+				}else{
+					lat = Math.max( - 85, Math.min( 85, lat ) );
+					phi = THREE.Math.degToRad( 90 - lat );
+					theta = THREE.Math.degToRad( lon );
+
+					camera.target.x = 500 * Math.sin( phi ) * Math.cos( theta );
+					camera.target.y = 500 * Math.cos( phi );
+					camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
+					camera.lookAt( camera.target );
+				}
+
+
+				if(isVR)
+				{
+					effect.render( scene, camera );
+				}else{
+					renderer.render( scene, camera );
+				}
+				
+			}
+
+		</script>
+	</body>
+</html>
