@@ -10,8 +10,6 @@
 				margin: 0px;
 				overflow: hidden;
 			}
-
-
 			.container-box{
 				display: block;
 				z-index: 1;
@@ -22,8 +20,6 @@
 				top: 0;
 				left: 0;
 			}
-
-
 			.video-div{
 				display: none;
 				overflow: hidden;
@@ -35,13 +31,11 @@
 				top: 0;
 				left: 0;
 			}
-
 			.video-box{
 				width: 100%;
 				position: absolute;
 			    margin: auto;
 			}
-
 			.nav {
 			  display: block;
 			  margin: 0;
@@ -52,7 +46,6 @@
 			  z-index: 886;
 
 			}
-
 			.icn {
 				width: 50px;
 				height: 50px;
@@ -60,7 +53,6 @@
 				margin-left: -25px;
 				position: relative;
 			}
-
 			.glass1 {
 			  background: url(./img/glass1.svg) 0 -50px no-repeat;
 			  background-size: 50px 100px;
@@ -69,7 +61,6 @@
 			  background: url(./img/glass2.svg) 0 -50px no-repeat;
 			  background-size: 50px 100px;
 			}
-
 		</style>
 	</head>
 	<body>
@@ -81,10 +72,8 @@
 		<div class="container-box" id="container"></div>
 
 		<div class="video-div">
-		    <video class="video-box" id="video1" src="cs0.mp4" x-webkit-airplay="true" webkit-playsinline="true" preload="auto" ></video>
+		    <video class="video-box" id="video1" x-webkit-airplay="true" webkit-playsinline="true" preload="auto" ></video>
 		</div>
-
-
 
 		<script src="build/zepto.min.js"></script>
 		<script src="build/three.min.js"></script>
@@ -92,6 +81,9 @@
 		<script src="js/effects/StereoEffect.js"></script>
 		<script>
 		    document.addEventListener('touchmove', function(event){event.preventDefault();}, false);
+
+            ///////
+		    var videoURL="cs1.mp4"; //VR视频地址
 
 		    var isVR=true;
 		    $(".nav").on("click",changeEye);
@@ -149,7 +141,7 @@
 				video.autoplay = true;
 				video.loop = true; 
 				video.crossOrigin='anonymous';
-				video.src='cs0.mp4';
+				video.src=videoURL;
 
 				videoTexture = new THREE.Texture( video );
 				videoTexture.generateMipmaps = false;
